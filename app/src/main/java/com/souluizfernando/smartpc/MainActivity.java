@@ -38,13 +38,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-
+        boolean sendMouseClickMsg = false;
+        String mouseClickCommand = "";
         if(v == leftButton){
+            mouseClickCommand = "left_click";
+            sendMouseClickMsg = true;
             tv.setText("Left Click Triggered");
         }
         else if(v == rightButton){
+            mouseClickCommand = "right_click";
+            sendMouseClickMsg = true;
             tv.setText("Right Click Triggered");
         }
+
+        if(sendMouseClickMsg){
+            try {
+                socket.sendMessage(new MouseCommand(mouseClickCommand, currentX, currentY).toJson());
+            } catch (WSListener.WebSocketNotConnectedException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
 
