@@ -1,5 +1,6 @@
 package com.souluizfernando.smartpc;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -67,10 +69,16 @@ public class MainActivity extends AppCompatActivity {
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(10);
 
-        socket = new WSListener();
+        socket = new WSListener(this);
         socket.connect(new OkHttpClient());
 
 
+
+
+    }
+    public void output(String message){
+        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
+        toast.show();
     }
     @Override
     public boolean onTouchEvent(MotionEvent e){
