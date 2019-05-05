@@ -128,6 +128,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case MotionEvent.ACTION_DOWN:
                 initialX = currentX;
                 initialY = currentY;
+                try {
+                    socket.sendMessage(
+                            new MouseCommand("touchpad_start", initialX, initialY).toJson()
+                    );
+                } catch (WSListener.WebSocketNotConnectedException e1) {
+                    e1.printStackTrace();
+                }
                 return true;
             case MotionEvent.ACTION_UP:
                 initialX = -1;
@@ -148,7 +155,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         tv.setText(socket.bConnected ? "Socket Connected" : "Socket Not Connected");
         if(socket.bConnected)
             try {
-                socket.sendMessage(new MouseCommand("move", 1, 1).toJson());
+                socket.sendMessage(
+                        new MouseCommand("touchpad_move", currentX, currentY).toJson()
+                );
             } catch (WSListener.WebSocketNotConnectedException e) {
                 e.printStackTrace();
             }
