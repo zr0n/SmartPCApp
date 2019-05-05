@@ -18,7 +18,7 @@ import com.google.gson.Gson;
 
 import okhttp3.OkHttpClient;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
 
     int currentX = 0;
     int currentY = 0;
@@ -35,9 +35,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button leftButton;
     Button rightButton;
     TextView tv;
+    ImageView iv;
+
+    boolean bListenToClick = false;
+    boolean bListenToTouch = !bListenToClick;
 
     @Override
     public void onClick(View v) {
+        if(!bListenToClick)
+            return;
         boolean sendMouseClickMsg = false;
         String mouseClickCommand = "";
         if(v == leftButton){
@@ -59,6 +65,65 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent e) {
+
+        currentX = (int) e.getX();
+        currentY = (int) e.getY();
+        if(v == leftButton || v == rightButton) {
+            if(!bListenToTouch)
+                return false;
+
+            switch(e.getAction()){
+                case MotionEvent.ACTION_DOWN:
+                    try {
+                        socket.sendMessage(new MouseCommand(
+                                v == leftButton ? "left_down" : "right_down", currentX, currentY).toJson()
+                        );
+                    } catch (WSListener.WebSocketNotConnectedException e1) {
+                        e1.printStackTrace();
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                    try {
+                        socket.sendMessage(new MouseCommand(
+                                v == leftButton ? "left_up" : "right_up", currentX, currentY).toJson()
+                        );
+                    } catch (WSListener.WebSocketNotConnectedException e1) {
+                        e1.printStackTrace();
+                    }
+                    break;
+            }
+        }
+        else if(v == iv){
+
+            switch(e.getAction()){
+                case MotionEvent.ACTION_MOVE:
+                    HandleMovement();
+                    return true;
+                case MotionEvent.ACTION_DOWN:
+                    initialX = currentX;
+                    initialY = currentY;
+                    try {
+                        socket.sendMessage(
+                                new MouseCommand("touchpad_start", initialX, initialY).toJson()
+                        );
+                    } catch (WSListener.WebSocketNotConnectedException e1) {
+                        e1.printStackTrace();
+                    }
+                    return true;
+                case MotionEvent.ACTION_UP:
+                    initialX = -1;
+                    initialY = -1;
+                    canvas.drawLine(0,0,0,0,paint);
+                    return true;
+
+            }
+        }
+
+        return true;
     }
 
 
@@ -86,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ImageView iv = (ImageView) findViewById(R.id.touchableArea);
+        iv = (ImageView) findViewById(R.id.touchableArea);
         bitMap = Bitmap.createBitmap(
                 (int) getWindowManager().getDefaultDisplay().getWidth(),
                 (int) getWindowManager().getDefaultDisplay().getHeight(),
@@ -111,41 +176,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rightButton.setOnClickListener(this);
 
         tv = (TextView) findViewById(R.id.textView);
+
+        iv.setOnTouchListener(this);
+        rightButton.setOnTouchListener(this);
+        leftButton.setOnTouchListener(this);
     }
     public void output(String message){
         Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
         toast.show();
     }
-    @Override
-    public boolean onTouchEvent(MotionEvent e){
-        currentX = (int) e.getX();
-        currentY = (int) e.getY();
 
-        switch(e.getAction()){
-            case MotionEvent.ACTION_MOVE:
-                HandleMovement();
-                return true;
-            case MotionEvent.ACTION_DOWN:
-                initialX = currentX;
-                initialY = currentY;
-                try {
-                    socket.sendMessage(
-                            new MouseCommand("touchpad_start", initialX, initialY).toJson()
-                    );
-                } catch (WSListener.WebSocketNotConnectedException e1) {
-                    e1.printStackTrace();
-                }
-                return true;
-            case MotionEvent.ACTION_UP:
-                initialX = -1;
-                initialY = -1;
-                canvas.drawLine(0,0,0,0,paint);
-                return true;
-
-        }
-
-        return true;
-    }
 
     private void HandleMovement(){
 
