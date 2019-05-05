@@ -8,6 +8,8 @@ import android.graphics.Paint;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +18,7 @@ import com.google.gson.Gson;
 
 import okhttp3.OkHttpClient;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     int currentX = 0;
     int currentY = 0;
@@ -29,6 +31,21 @@ public class MainActivity extends AppCompatActivity {
     Paint paint;
     WSListener socket;
 
+
+    Button leftButton;
+    Button rightButton;
+    TextView tv;
+
+    @Override
+    public void onClick(View v) {
+
+        if(v == leftButton){
+            tv.setText("Left Click Triggered");
+        }
+        else if(v == rightButton){
+            tv.setText("Right Click Triggered");
+        }
+    }
 
 
     public static class MouseCommand{
@@ -73,8 +90,13 @@ public class MainActivity extends AppCompatActivity {
         socket.connect(new OkHttpClient());
 
 
+        leftButton = findViewById(R.id.leftClickBtn);
+        rightButton = findViewById(R.id.rightClickBtn);
 
+        leftButton.setOnClickListener(this);
+        rightButton.setOnClickListener(this);
 
+        tv = (TextView) findViewById(R.id.textView);
     }
     public void output(String message){
         Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
@@ -106,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void HandleMovement(){
 
-        TextView tv = (TextView) findViewById(R.id.textView);
+
         //tv.setText("iX: " + initialX + " iY: " + initialY + " cX: " + currentX + " cY: " + currentY);
         //tv.setText(new MouseCommand("Move", 0, 0).toJson());
         tv.setText(socket.bConnected ? "Socket Connected" : "Socket Not Connected");
