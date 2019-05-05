@@ -10,6 +10,10 @@ import android.view.MotionEvent;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+
+import okhttp3.OkHttpClient;
+
 public class MainActivity extends AppCompatActivity {
 
     int currentX = 0;
@@ -21,6 +25,28 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitMap;
     Canvas canvas;
     Paint paint;
+    WSListener socket;
+
+
+
+    public static class MouseCommand{
+
+        public String command;
+        public int x;
+        public int y;
+
+        public MouseCommand(String command, int x, int y){
+            this.x = x;
+            this.y = y;
+            this.command = command;
+        }
+
+
+        public String toJson(){
+            Gson gson = new Gson();
+            return gson.toJson(this);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ImageView iv = (ImageView) findViewById(R.id.touchableArea);
-
         bitMap = Bitmap.createBitmap(
                 (int) getWindowManager().getDefaultDisplay().getWidth(),
                 (int) getWindowManager().getDefaultDisplay().getHeight(),
@@ -41,6 +66,9 @@ public class MainActivity extends AppCompatActivity {
         paint = new Paint();
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(10);
+
+        socket = new WSListener();
+        socket.connect(new OkHttpClient());
 
 
     }
@@ -71,7 +99,16 @@ public class MainActivity extends AppCompatActivity {
     private void HandleMovement(){
 
         TextView tv = (TextView) findViewById(R.id.textView);
-        tv.setText("iX: " + initialX + " iY: " + initialY + " cX: " + currentX + " cY: " + currentY);
+        //tv.setText("iX: " + initialX + " iY: " + initialY + " cX: " + currentX + " cY: " + currentY);
+        //tv.setText(new MouseCommand("Move", 0, 0).toJson());
+        tv.setText(socket.bConnected ? "Socket Connected" : "Socket Not Connected");
+        if(socket.bConnected)
+            try {
+                socket.sendMessage(new MouseCommand("move", 1, 1).toJson());
+            } catch (WSListener.WebSocketNotConnectedException e) {
+                e.printStackTrace();
+            }
+
         DrawLine();
     }
 
