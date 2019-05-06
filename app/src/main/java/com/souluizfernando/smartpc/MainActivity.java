@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +19,7 @@ import com.google.gson.Gson;
 
 import okhttp3.OkHttpClient;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, SeekBar.OnSeekBarChangeListener {
 
     int currentX = 0;
     int currentY = 0;
@@ -31,11 +32,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Paint paint;
     WSListener socket;
 
-
+    //Views
     Button leftButton;
     Button rightButton;
     TextView tv;
     ImageView iv;
+    SeekBar volumeControl;
 
     boolean bListenToClick = false;
     boolean bListenToTouch = !bListenToClick;
@@ -126,12 +128,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        try {
+            socket.sendMessage(
+                    new MouseCommand("set_volume", progress, 666 /* Random x) */).toJson()
+            );
+        } catch (WSListener.WebSocketNotConnectedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
 
     public static class MouseCommand{
 
         public String command;
         public int x;
         public int y;
+        public float extra;
 
         public MouseCommand(String command, int x, int y){
             this.x = x;
@@ -150,8 +174,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        saveViewsRefs();
+        bindViewListeners();
+        setupSocket();
+        setupCanvas();
+    }
+    void saveViewsRefs(){
+        //Get Views
+        tv = findViewById(R.id.textView);
+        leftButton = findViewById(R.id.leftClickBtn);
+        rightButton = findViewById(R.id.rightClickBtn);
+        iv = findViewById(R.id.touchableArea);
+        volumeControl = findViewById(R.id.volumeControl);
+    }
+    void bindViewListeners(){
+        //Bind Views Listeners
+        leftButton.setOnClickListener(this);
+        rightButton.setOnClickListener(this);
+        iv.setOnTouchListener(this);
+        rightButton.setOnTouchListener(this);
+        leftButton.setOnTouchListener(this);
+        volumeControl.setOnSeekBarChangeListener(this);
 
-        iv = (ImageView) findViewById(R.id.touchableArea);
+    }
+    void setupSocket(){
+        socket = new WSListener(this);
+        socket.connect(new OkHttpClient());
+    }
+    void setupCanvas(){
         bitMap = Bitmap.createBitmap(
                 (int) getWindowManager().getDefaultDisplay().getWidth(),
                 (int) getWindowManager().getDefaultDisplay().getHeight(),
@@ -164,26 +214,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         paint = new Paint();
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(10);
-
-        socket = new WSListener(this);
-        socket.connect(new OkHttpClient());
-
-
-        leftButton = findViewById(R.id.leftClickBtn);
-        rightButton = findViewById(R.id.rightClickBtn);
-
-        leftButton.setOnClickListener(this);
-        rightButton.setOnClickListener(this);
-
-        tv = (TextView) findViewById(R.id.textView);
-
-        iv.setOnTouchListener(this);
-        rightButton.setOnTouchListener(this);
-        leftButton.setOnTouchListener(this);
-    }
-    public void output(String message){
-        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
-        toast.show();
     }
 
 
