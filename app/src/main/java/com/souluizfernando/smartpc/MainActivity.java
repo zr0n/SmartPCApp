@@ -27,6 +27,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int initialX = 0;
     int initialY = 0;
 
+    int mouseSpeed = 20;
+
+    int initialVolume = 40;
+
     Bitmap bitMap;
     Canvas canvas;
     Paint paint;
@@ -38,9 +42,66 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView tv;
     ImageView iv;
     SeekBar volumeControl;
+    SeekBar speedControl;
 
     boolean bListenToClick = false;
     boolean bListenToTouch = !bListenToClick;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        saveViewsRefs();
+        bindViewListeners();
+        setupSocket();
+        setupCanvas();
+        setDefaultValues();
+    }
+    void saveViewsRefs(){
+        //Get Views
+        tv = findViewById(R.id.textView);
+        leftButton = findViewById(R.id.leftClickBtn);
+        rightButton = findViewById(R.id.rightClickBtn);
+        iv = findViewById(R.id.touchableArea);
+        volumeControl = findViewById(R.id.volumeControl);
+        speedControl = findViewById(R.id.speedControl);
+    }
+    void setDefaultValues(){
+        speedControl.setProgress(mouseSpeed);
+        volumeControl.setProgress(initialVolume);
+
+        updateAudioVolume(initialVolume);
+    }
+    void bindViewListeners(){
+        //Bind Views Listeners
+        leftButton.setOnClickListener(this);
+        rightButton.setOnClickListener(this);
+        iv.setOnTouchListener(this);
+        rightButton.setOnTouchListener(this);
+        leftButton.setOnTouchListener(this);
+        volumeControl.setOnSeekBarChangeListener(this);
+        speedControl.setOnSeekBarChangeListener(this);
+
+    }
+    void setupSocket(){
+        socket = new WSListener(this);
+        socket.connect(new OkHttpClient());
+    }
+    void setupCanvas(){
+        bitMap = Bitmap.createBitmap(
+                (int) getWindowManager().getDefaultDisplay().getWidth(),
+                (int) getWindowManager().getDefaultDisplay().getHeight(),
+                Bitmap.Config.ARGB_8888
+        );
+
+        canvas = new Canvas(bitMap);
+        iv.setImageBitmap(bitMap);
+
+        paint = new Paint();
+        paint.setColor(Color.WHITE);
+        paint.setStrokeWidth(10);
+    }
 
     @Override
     public void onClick(View v) {
@@ -130,9 +191,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if(seekBar == volumeControl){
+            updateAudioVolume(progress);
+        }
+        else if(seekBar == speedControl){
+            mouseSpeed = progress;
+        }
+
+    }
+
+    void updateAudioVolume(int newVolume){
         try {
             socket.sendMessage(
-                    new MouseCommand("set_volume", progress, 666 /* Random x) */).toJson()
+                    new MouseCommand("set_volume", newVolume, 666 /* Random x) */).toJson()
             );
         } catch (WSListener.WebSocketNotConnectedException e) {
             e.printStackTrace();
@@ -170,51 +241,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        saveViewsRefs();
-        bindViewListeners();
-        setupSocket();
-        setupCanvas();
-    }
-    void saveViewsRefs(){
-        //Get Views
-        tv = findViewById(R.id.textView);
-        leftButton = findViewById(R.id.leftClickBtn);
-        rightButton = findViewById(R.id.rightClickBtn);
-        iv = findViewById(R.id.touchableArea);
-        volumeControl = findViewById(R.id.volumeControl);
-    }
-    void bindViewListeners(){
-        //Bind Views Listeners
-        leftButton.setOnClickListener(this);
-        rightButton.setOnClickListener(this);
-        iv.setOnTouchListener(this);
-        rightButton.setOnTouchListener(this);
-        leftButton.setOnTouchListener(this);
-        volumeControl.setOnSeekBarChangeListener(this);
-
-    }
-    void setupSocket(){
-        socket = new WSListener(this);
-        socket.connect(new OkHttpClient());
-    }
-    void setupCanvas(){
-        bitMap = Bitmap.createBitmap(
-                (int) getWindowManager().getDefaultDisplay().getWidth(),
-                (int) getWindowManager().getDefaultDisplay().getHeight(),
-                Bitmap.Config.ARGB_8888
-        );
-
-        canvas = new Canvas(bitMap);
-        iv.setImageBitmap(bitMap);
-
-        paint = new Paint();
-        paint.setColor(Color.WHITE);
-        paint.setStrokeWidth(10);
-    }
 
 
     private void HandleMovement(){
@@ -223,14 +249,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //tv.setText("iX: " + initialX + " iY: " + initialY + " cX: " + currentX + " cY: " + currentY);
         //tv.setText(new MouseCommand("Move", 0, 0).toJson());
         tv.setText(socket.bConnected ? "Socket Connected" : "Socket Not Connected");
-        if(socket.bConnected)
-            try {
-                socket.sendMessage(
-                        new MouseCommand("touchpad_move", currentX, currentY).toJson()
-                );
-            } catch (WSListener.WebSocketNotConnectedException e) {
-                e.printStackTrace();
-            }
+
+        MouseCommand mc = new MouseCommand("touchpad_move", currentX, currentY);
+        mc.extra = (float) mouseSpeed;
+
+        try {
+            socket.sendMessage(
+                    mc.toJson()
+            );
+        } catch (WSListener.WebSocketNotConnectedException e) {
+            e.printStackTrace();
+        }
 
         DrawLine();
     }

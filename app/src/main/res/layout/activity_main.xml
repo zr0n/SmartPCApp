@@ -15,7 +15,7 @@
         <ImageView
             android:id="@+id/touchableArea"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="200dp"
             app:srcCompat="@color/Perfume" />
         <TextView
             android:id="@+id/textView"
@@ -27,10 +27,45 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-        <SeekBar
-            android:id="@+id/volumeControl"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="30dp" />
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="match_parent"
+                android:textAlignment="center"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:text="Audio Volume"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <SeekBar
+                android:id="@+id/volumeControl"
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_width="match_parent"
+                android:textAlignment="center"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:text="Mouse Speed"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <SeekBar
+                android:id="@+id/speedControl"
+                android:layout_width="match_parent"
+                android:layout_height="30dp" />
+        </LinearLayout>
+
         <LinearLayout
             android:textAlignment="center"
             android:alignmentMode="alignMargins"
