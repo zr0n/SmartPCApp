@@ -94,13 +94,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 (int) getWindowManager().getDefaultDisplay().getHeight(),
                 Bitmap.Config.ARGB_8888
         );
-
+        /*
         canvas = new Canvas(bitMap);
         iv.setImageBitmap(bitMap);
-
         paint = new Paint();
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(10);
+        */
     }
 
     @Override
@@ -180,7 +180,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 case MotionEvent.ACTION_UP:
                     initialX = -1;
                     initialY = -1;
+                    /*
                     canvas.drawLine(0,0,0,0,paint);
+                    float textWidth = 50.f;
+                    float textHeight = 15.f;
+
+                    float x = iv.getWidth() * .5f;
+                    x -= textWidth * .5f;
+
+                    float y = iv.getHeight() * .5f;
+                    y -= textHeight * .5f;
+
+                    canvas.drawText("Touchpad Zone", x, y, paint);
+                    */
                     return true;
 
             }
@@ -246,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void HandleMovement(){
 
 
-        //tv.setText("iX: " + initialX + " iY: " + initialY + " cX: " + currentX + " cY: " + currentY);
+        tv.setText("iX: " + initialX + " iY: " + initialY + " cX: " + currentX + " cY: " + currentY);
         //tv.setText(new MouseCommand("Move", 0, 0).toJson());
         tv.setText(socket.bConnected ? "Socket Connected" : "Socket Not Connected");
 
@@ -261,12 +273,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             e.printStackTrace();
         }
 
-        DrawLine();
+        //DrawLine();
     }
 
     private void DrawLine(){
 
-        canvas.drawColor(getResources().getColor(R.color.Meteorite));
+        canvas.drawColor(getResources().getColor(R.color.colorAccent));
+
         canvas.drawLine(initialX, initialY, currentX, currentY, paint);
     }
 }
